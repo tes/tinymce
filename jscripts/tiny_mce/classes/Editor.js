@@ -2564,8 +2564,8 @@
 				});
 
 				t.onKeyDown.add(function(ed, e) {
-					// Is caracter positon keys
-					if ((e.keyCode >= 33 && e.keyCode <= 36) || (e.keyCode >= 37 && e.keyCode <= 40) || e.keyCode == 13 || e.keyCode == 45) {
+					// If caracter positon keys or enter, insert, backspace, delete
+					if ((e.keyCode >= 33 && e.keyCode <= 36) || (e.keyCode >= 37 && e.keyCode <= 40) || e.keyCode == 13 || e.keyCode == 45 || e.keyCode == 8 || e.keyCode == 46) {
 						if (t.undoManager.typing)
 							addUndo();
 
