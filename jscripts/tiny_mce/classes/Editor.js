@@ -1643,7 +1643,7 @@
 			if (!/^(mceAddUndoLevel|mceEndUndoLevel|mceBeginUndoLevel|mceRepaint|SelectAll)$/.test(cmd) && (!a || !a.skip_focus))
 				t.focus();
 
-			o = {};
+			o = tinymce.extend({}, a);
 			t.onBeforeExecCommand.dispatch(t, cmd, ui, val, o);
 			if (o.terminate)
 				return false;
