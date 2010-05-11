@@ -39,23 +39,24 @@
 		 * @return {String} HTML for the split button control element.
 		 */
 		renderHTML : function() {
-			var h, t = this, s = t.settings, h1;
+			var cp = this.classPrefix, h, t = this, s = t.settings, h1;
 
 			h = '<tbody><tr>';
+			var l = DOM.encode(s.label || '');
 
 			if (s.image)
-				h1 = DOM.createHTML('img ', {src : s.image, 'class' : 'mceAction ' + s['class']});
+				h1 = DOM.createHTML('img ', {src : s.image, 'class' : 'mceAction ' + s['class']}) + l;
 			else
-				h1 = DOM.createHTML('span', {'class' : 'mceAction ' + s['class']}, '');
+				h1 = DOM.createHTML('span', {'class' : 'mceAction ' + s['class']}, '') + (l ? '<span class="' + cp + 'Label">' + l + '</span>' : '');
 
 			h += '<td>' + DOM.createHTML('a', {id : t.id + '_action', href : 'javascript:;', 'class' : 'mceAction ' + s['class'], onclick : "return false;", onmousedown : 'return false;', title : s.title}, h1) + '</td>';
 	
-			h1 = DOM.createHTML('span', {'class' : 'mceOpen ' + s['class']});
+			h1 = DOM.createHTML('span', {'class' : 'mceOpen ' + s['class']}, '');
 			h += '<td>' + DOM.createHTML('a', {id : t.id + '_open', href : 'javascript:;', 'class' : 'mceOpen ' + s['class'], onclick : "return false;", onmousedown : 'return false;', title : s.title}, h1) + '</td>';
 
 			h += '</tr></tbody>';
 
-			return DOM.createHTML('table', {id : t.id, 'class' : 'mceSplitButton mceSplitButtonEnabled ' + s['class'], cellpadding : '0', cellspacing : '0', onmousedown : 'return false;', title : s.title}, h);
+			return DOM.createHTML('table', {id : t.id, 'class' : cp + ' ' + cp + 'Enabled ' + s['class'] + (l ? ' ' + cp + 'Labeled' : ''), cellpadding : '0', cellspacing : '0', onmousedown : 'return false;', title : s.title}, h);
 		},
 
 		/**
