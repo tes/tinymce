@@ -149,6 +149,14 @@
 				function insertBr(ed) {
 					var rng = selection.getRng(), br, div = dom.create('div', null, ' '), divYPos, vpHeight = dom.getViewPort(ed.getWin()).h;
 
+                                        // Don't put breaks inside anchor tags; move them outside
+                                        var parentAnchor = dom.getParent(selection.getNode(), 'a');
+                                        if (parentAnchor) {
+                                          selection.select(parentAnchor);
+                                          selection.collapse();
+                                          rng = selection.getRng();
+                                        }
+
 					// Insert BR element
 					rng.insertNode(br = dom.create('br'));
 
