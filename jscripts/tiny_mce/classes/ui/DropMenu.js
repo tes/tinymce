@@ -347,10 +347,12 @@
 			switch (kc) {
 				case 38:
 					focus(-1); // Select first link
+					tinymce.dom.Event.cancel(e); // don't let the document scroll
 					return;
 
 				case 40:
 					focus(1);
+					tinymce.dom.Event.cancel(e);
 					return;
 
 				case 13:
