@@ -139,7 +139,7 @@
 					ed.onKeyPress.add(function(ed, e) {
 						var n;
 
-						if (e.keyCode == 13 && selection.getNode().nodeName != 'LI') {
+						if (e.keyCode == 13 && !dom.getParent(selection.getNode(), 'h1,h2,h3,h4,h5,h6,ol,ul') ){
 							selection.setContent('<br id="__" /> ', {format : 'raw'});
 							n = dom.get('__');
 							n.removeAttribute('id');
