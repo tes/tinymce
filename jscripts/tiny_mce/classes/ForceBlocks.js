@@ -139,7 +139,7 @@
 					ed.onKeyPress.add(function(ed, e) {
 						var n;
 
-						if (e.keyCode == 13 && !dom.getParent(selection.getNode(), 'h1,h2,h3,h4,h5,h6,ol,ul') ){
+						if (e.keyCode == 13 && !dom.getParent(selection.getNode(), 'h1,h2,h3,h4,h5,h6,ol,ul,a') ){
 							selection.setContent('<br id="__" /> ', {format : 'raw'});
 							n = dom.get('__');
 							n.removeAttribute('id');
@@ -213,14 +213,6 @@
 				function insertBr(ed) {
 					var rng = selection.getRng(), br, div = dom.create('div', null, ' '), divYPos, vpHeight = dom.getViewPort(ed.getWin()).h;
 
-					// Don't put breaks inside anchor tags; move them outside
-					var parentAnchor = dom.getParent(selection.getNode(), 'a');
-					if (parentAnchor) {
-						selection.select(parentAnchor);
-						selection.collapse();
-						rng = selection.getRng();
-					}
-
 					// Insert BR element
 					rng.insertNode(br = dom.create('br'));
 
@@ -247,7 +239,7 @@
 				};
 
 				ed.onKeyPress.add(function(ed, e) {
-					if (e.keyCode == 13 && (e.shiftKey || (s.force_br_newlines && !dom.getParent(selection.getNode(), 'h1,h2,h3,h4,h5,h6,ol,ul')))) {
+					if (e.keyCode == 13 && (e.shiftKey || (s.force_br_newlines && !dom.getParent(selection.getNode(), 'h1,h2,h3,h4,h5,h6,ol,ul,a')))) {
 						insertBr(ed);
 						Event.cancel(e);
 					}
