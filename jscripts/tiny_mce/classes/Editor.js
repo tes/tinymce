@@ -2614,7 +2614,7 @@
 						return;
 					}
 
-					if (!t.undoManager.typing) {
+          if (!t.undoManager.typing && e.keyCode != 15 && e.keyCode != 16 && e.keyCode != 17) {
 						t.undoManager.add();
 						t.undoManager.typing = 1;
 					}
