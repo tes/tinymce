@@ -736,10 +736,10 @@
 							r = ed.getDoc().createRange();
 							r.setStart(n, n.nodeValue ? n.nodeValue.length : 0);
 							r.setEnd(n, n.nodeValue ? n.nodeValue.length : 0);
-							se.setRng(r);
 
-							// Remove the target container
-							ed.dom.remove(sc);
+							// Delete the content, then set the selection
+							se.setContent('');
+							se.setRng(r);
 						}
 
 						return Event.cancel(e);
