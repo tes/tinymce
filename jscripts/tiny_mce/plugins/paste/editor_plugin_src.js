@@ -218,6 +218,7 @@
 
 							// WebKit duplicates the divs so we need to remove them
 							each(dom.select('div.mcePaste', n), function(n) {
+								dom.insertAfter(dom.create('br'), n); // preserve linebreak
 								dom.remove(n, 1);
 							});
 
@@ -233,7 +234,7 @@
 
 							h += n.innerHTML;
 						});
-            h += '<span id="endPasteHolder"> </span>';
+ 						h += '<span id="endPasteHolder"> </span>';
 
 						// Remove the nodes
 						each(nl, function(n) {
