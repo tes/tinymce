@@ -738,7 +738,7 @@
 							r.setEnd(n, n.nodeValue ? n.nodeValue.length : 0);
 
 							// Delete the content, then set the selection
-							se.setContent('');
+							ed.dom.remove(sc); // the old workaround "sc.se.setContent('');" does not work as of 4 Oct 10.  Note that disabling this entire section also works.
 							se.setRng(r);
 						}
 
