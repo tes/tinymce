@@ -15,7 +15,7 @@
 
 	// jQuery is undefined
 	if (!$)
-		return alert("Load jQuery first!");
+		return alert("Some of the Javascript files required for Wikispaces did not load. Please reload this page and try again. If this problem continues, make sure an anti-virus program, firewall, or web filter is not blocking Wikispaces Javascript files.");
 
 	// Stick jQuery into the tinymce namespace
 	tinymce.$ = $;
