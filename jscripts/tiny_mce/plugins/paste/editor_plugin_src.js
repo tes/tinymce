@@ -283,11 +283,6 @@
 
 						process({content : h});
 
-            // // Fixes the incorrect webkit cursor position (before paste) and also the
-            // // strange scrolling caused by the temporary holder div created above
-            // var endRange = dom.get('endPasteHolder');
-            // ed.plugins.wscommon.cursorToAndRemoveElement(endRange);
-
 						// Unblock events ones we got the contents
 						dom.unbind(ed.getDoc(), 'mousedown', block);
 						dom.unbind(ed.getDoc(), 'keydown', block);
