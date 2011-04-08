@@ -363,31 +363,6 @@
 		},
 
 		_keyHandler : function(evt) {
-// 			function focus(d) {
-// 				var i = t._focusIdx + d, e = DOM.select('a', 'menu_' + t.id)[i];
-// 
-// 				if (e) {
-// 					t._focusIdx = i;
-// 					e.focus();
-// 				}
-// 			};
-// 
-// 			switch (kc) {
-// 				case 38:
-// 					focus(-1); // Select first link
-// 					tinymce.dom.Event.cancel(e); // don't let the document scroll
-// 					return;
-// 
-// 				case 40:
-// 					focus(1);
-// 					tinymce.dom.Event.cancel(e);
-// 					return;
-// 
-// 				case 13:
-// 					return;
-// 
-// 				case 27:
-// 					return this.hideMenu();
 			var t = this, e;
 			switch (evt.keyCode) {
 				case 37: // Left
@@ -401,6 +376,11 @@
 					if (t.mouseOverFunc)
 						t.mouseOverFunc(evt);
 					break;
+				case 38:
+				case 40:
+					tinymce.dom.Event.cancel(evt); // don't let the document scroll
+					return;
+
 			}
 		},
 
