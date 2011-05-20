@@ -16,6 +16,7 @@
 			paste_block_drop : false,
 			paste_retain_style_properties : "none",
 			paste_strip_class_attributes : "mso",
+			paste_remove_word_images : true,
 			paste_remove_spans : false,
 			paste_remove_styles : false,
 			paste_remove_styles_if_webkit : true,
@@ -385,12 +386,16 @@
 					]);
 				}
 
+				if (getParam(ed, "paste_remove_word_images")) {
+					process([/<img[^>]*>/gi]);
+				}
+
 				process([
 					// Word comments like conditional comments etc
 					/<!--[\s\S]+?-->/gi,
 
 					// Remove comments, scripts (e.g., msoShowComment), XML tag, VML content, MS Office namespaced tags, and a few other tags
-					/<(!|script[^>]*>.*?<\/script(?=[>\s])|\/?(\?xml(:\w+)?|img|meta|link|style|\w:\w+)(?=[\s\/>]))[^>]*>/gi,
+					/<(!|script[^>]*>.*?<\/script(?=[>\s])|\/?(\?xml(:\w+)?|meta|link|style|\w:\w+)(?=[\s\/>]))[^>]*>/gi,
 
 					// Convert <s> into <strike> for line-though
 					[/<(\/?)s>/gi, "<$1strike>"],
