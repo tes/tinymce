@@ -143,7 +143,7 @@ test('getBoolAttrs', function() {
 
 	var schema = new tinymce.html.Schema();
 	deepEqual(schema.getBoolAttrs(), {
-		"controls": {}, "loop": {}, "autoplay": {}, "preload": {}, "selected": {}, "readonly": {}, "nowrap": {},
+		"controls": {}, "loop": {}, "autoplay": {}, "selected": {}, "readonly": {}, "nowrap": {},
 		"noshade": {}, "noresize": {}, "nohref": {}, "multiple": {}, "ismap": {}, "disabled": {}, "defer": {},
 		"declare": {}, "compact": {}, "checked": {}
 	});
@@ -186,7 +186,7 @@ test('getNonEmptyElements', function() {
 		"embed": {}, "param": {}, "meta": {}, "link": {}, "isindex": {},
 		"input": {}, "img": {}, "hr": {}, "frame": {}, "col": {}, "br": {},
 		"basefont": {}, "base": {}, "area": {}, "source" : {},
-		"td": {}, "th": {}, "iframe": {}, "video": {}, "object": {}
+		"td": {}, "th": {}, "iframe": {}, "video": {}, "audio": {}, "object": {}
 	});
 });
 
@@ -195,7 +195,7 @@ test('getWhiteSpaceElements', function() {
 
 	var schema = new tinymce.html.Schema();
 	deepEqual(schema.getWhiteSpaceElements(), {
-		"style": {}, "script": {}, "pre": {}
+		"style": {}, "script": {}, "pre": {}, "textarea": {}
 	});
 });
 
@@ -245,6 +245,17 @@ test('addValidChildren', function() {
 	ok(schema.isValidChild('body', 'p'));
 	schema.addValidChildren('-body[p]');
 	ok(!schema.isValidChild('body', 'p'));
+});
+
+test('addCustomElements/getCustomElements', function() {
+	expect(4);
+
+	var schema = new tinymce.html.Schema();
+	schema.addCustomElements('~inline,block');
+	ok(schema.getBlockElements()['block']);
+	ok(!schema.getBlockElements()['inline']);
+	ok(schema.getCustomElements()['inline']);
+	ok(schema.getCustomElements()['block']);
 });
 </script>
 </head>
