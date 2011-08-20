@@ -232,7 +232,8 @@
 
 			queueLoadedCallbacks.push({
 				func : callback,
-				scope : scope || this
+				scope : scope || this,
+				executing : false
 			});
 
 			loadScripts = function() {
@@ -269,7 +270,10 @@
 				// No scripts are currently loading then execute all pending queue loaded callbacks
 				if (!loading) {
 					tinymce.each(queueLoadedCallbacks, function(callback) {
-						callback.func.call(callback.scope);
+						if (!callback.executing) {
+							callback.executing = true;
+							callback.func.call(callback.scope);
+						}
 					});
 
 					queueLoadedCallbacks.length = 0;
