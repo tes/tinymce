@@ -1007,7 +1007,7 @@
 				sl.loadQueue(function() {
 					if (!t.removed)
 						t.init();
-				}, t);
+				});
 			};
 
 			loadScripts();
