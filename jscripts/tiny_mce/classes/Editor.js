@@ -3291,7 +3291,7 @@
 
 			// Fire a nodeChanged when the selection is changed on WebKit this fixes selection issues on iOS5
 			// It only fires the nodeChange event every 50ms since it would other wise update the UI when you type and it hogs the CPU
-			if (tinymce.isWebKit) {
+			if (tinymce.isWebKit && tinymce.isIOS5) {
 				dom.bind(t.getDoc(), 'selectionchange', function() {
 					if (t.selectionTimer) {
 						window.clearTimeout(t.selectionTimer);
