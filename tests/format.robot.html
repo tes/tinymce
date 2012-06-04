@@ -25,8 +25,8 @@
 				robot.type('g', false, function() {
 					var actual = editor.getContent();
 					var cleaned = actual.replace("<br />","");
-					equals(cleaned, expected);
-					queue.done();
+					equal(cleaned, expected);
+					start();
 				}, editor.getBody())
 			}, editor.getBody());
 		}
@@ -54,9 +54,9 @@
 			editor.focus();
 			setSelection('#a', 0, '#b', 0);
 			editor.execCommand('formatBlock', false, 'h1');
-			equals(editor.dom.select('#a')[0].tagName, 'H1');
-			equals(editor.dom.select('#b')[0].tagName, 'DIV');
-			queue.done();
+			equal(editor.dom.select('#a')[0].tagName, 'H1');
+			equal(editor.dom.select('#b')[0].tagName, 'DIV');
+			start();
 		});
 
 		var initTinyFunction = function(){
