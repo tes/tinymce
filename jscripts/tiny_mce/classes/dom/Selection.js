@@ -800,7 +800,7 @@
 			}
 
 			// If range is at start of document then move it to start of body
-			if (rng.setStart && rng.startContainer.nodeType === 9 && rng.collapsed) {
+			if (!tinymce.isIE && rng.setStart && rng.startContainer.nodeType === 9 && rng.collapsed) {
 				elm = self.dom.getRoot();
 				rng.setStart(elm, 0);
 				rng.setEnd(elm, 0);
