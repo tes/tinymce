@@ -1012,7 +1012,7 @@
 				styleElm.id = 'mceDefaultStyles';
 				styleElm.type = 'text/css';
 
-				head = doc.getElementsByTagName('head')[0]
+				head = doc.getElementsByTagName('head')[0];
 				if (head.firstChild) {
 					head.insertBefore(styleElm, head.firstChild);
 				} else {
@@ -1255,7 +1255,7 @@
 						// Add all children from div to target
 						each (tinymce.grep(newElement.childNodes), function(node, i) {
 							// Skip br element
-							if (i)
+							if (i && element.canHaveHTML)
 								element.appendChild(node);
 						});
 					}
