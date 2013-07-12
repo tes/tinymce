@@ -165,7 +165,7 @@ define("tinymce/UndoManager", [
 			 * @return {Object} Undo level that got added or null it a level wasn't needed.
 			 */
 			add: function(level) {
-				var i, settings = editor.settings, lastLevel;
+				var settings = editor.settings, lastLevel;
 
 				level = level || {};
 				level.content = getContent();
@@ -188,12 +188,7 @@ define("tinymce/UndoManager", [
 				// Time to compress
 				if (settings.custom_undo_redo_levels) {
 					if (data.length > settings.custom_undo_redo_levels) {
-						for (i = 0; i < data.length - 1; i++) {
-							data[i] = data[i + 1];
-						}
-
-						data.length--;
-						index = data.length;
+						self.dropOldestUndo();
 					}
 				}
 
@@ -201,9 +196,7 @@ define("tinymce/UndoManager", [
 				level.bookmark = editor.selection.getBookmark(2, true);
 
 				// Crop array if needed
-				if (index < data.length - 1) {
-					data.length = index + 1;
-				}
+				self.clearRedo();
 
 				data.push(level);
 				index = data.length - 1;
@@ -218,6 +211,25 @@ define("tinymce/UndoManager", [
 				}
 
 				return level;
+			},
+
+			clearRedo: function() {
+				if (index < data.length - 1) {
+					data.length = index + 1;
+				}
+			},
+
+			dropOldestUndo: function() {
+				if (data.length < 2) {
+					return;
+				}
+
+				for (var i = 0; i < data.length - 1; i++) {
+					data[i] = data[i + 1];
+				}
+
+				data.length--;
+				index--;
 			},
 
 			/**
