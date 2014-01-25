@@ -103,14 +103,18 @@ exports.less = function (options) {
 			source += fs.readFileSync(path.join(options.baseDir, sourceFile), 'utf-8').toString().replace(/^\uFEFF/g, '');
 		});
 
-		if (options.toLess) {
+		if (options.toLessDev) {
 			var lessImportCode = "";
 
 			sourceFile.forEach(function(sourceFile) {
 				lessImportCode += '@import "' + sourceFile + '";\n';
 			});
 
-			fs.writeFileSync(options.toLess, lessImportCode);
+			fs.writeFileSync(options.toLessDev, lessImportCode);
+		}
+
+		if (options.toLess) {
+			fs.writeFileSync(options.toLess, source);
 		}
 	} else {
 		lastMod = getFileModTime(sourceFile);
@@ -206,7 +210,7 @@ exports.jshint = function (options) {
 		}
 
 		if (/\.js$/.test(filePath)) {
-			if (!jshint(fs.readFileSync(filePath).toString(), options)) {
+			if (!jshint(fs.readFileSync(filePath).toString(), options, {define: true})) {
 				// Print the errors
 				console.log(color('Errors in file ' + filePath, 'red'));
 				var out = jshint.data(),

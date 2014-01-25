@@ -246,7 +246,7 @@
 		equal(DOM.encode('abc<>"&\'\u00e5\u00e4\u00f6'), 'abc&lt;&gt;&quot;&amp;&#39;\u00e5\u00e4\u00f6');
 	});
 
-	test('setGetAttrib', 14, function() {
+	test('setGetAttrib', 16, function() {
 		var dom;
 
 		DOM.add(document.body, 'div', {id : 'test'});
@@ -260,6 +260,10 @@
 		equal(DOM.getAttrib('test', 'abc'), '');
 
 		DOM.setAttribs('test', {'class' : '123', title : 'abc'});
+		equal(DOM.getAttrib('test', 'class'), '123');
+		equal(DOM.getAttrib('test', 'title'), 'abc');
+
+		DOM.setAttribs('test');
 		equal(DOM.getAttrib('test', 'class'), '123');
 		equal(DOM.getAttrib('test', 'title'), 'abc');
 
@@ -652,6 +656,27 @@
 	test('isEmpty on P with two BR in EM', function() {
 		var elm = DOM.create('p', null, '<em><br><br></em>');
 		equal(false, DOM.isEmpty(elm));
+	});
+
+	test('bind/unbind/fire', function() {
+		var count = 0;
+
+		DOM.bind(document, 'click', function() {count++;});
+		DOM.fire(document, 'click');
+		DOM.unbind(document, 'click');
+		equal(count, 1);
+
+		count = 0;
+		DOM.bind([document, window], 'click', function(e) {e.stopPropagation(); count++;});
+		DOM.fire(document, 'click');
+		DOM.fire(window, 'click');
+		DOM.unbind([document, window], 'click');
+		equal(count, 2);
+
+		count = 0;
+		DOM.fire(document, 'click');
+		DOM.fire(window, 'click');
+		equal(count, 0);
 	});
 
 	DOM.remove('test');
