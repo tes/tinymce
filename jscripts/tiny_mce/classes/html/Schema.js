@@ -143,7 +143,7 @@
 					'form[A|accept-charset|action|autocomplete|enctype|method|name|novalidate|target][C]' +
 					'fieldset[A|disabled|form|name][C|legend]' +
 					'label[A|form|for][B]' +
-					'input[A|type|accept|alt|autocomplete|checked|disabled|form|formaction|formenctype|formmethod|formnovalidate|formtarget|height|list|max|maxlength|min|' +
+					'input[A|type|accept|alt|autocomplete|autofocus|checked|disabled|form|formaction|formenctype|formmethod|formnovalidate|formtarget|height|list|max|maxlength|min|' +
 						'multiple|pattern|placeholder|readonly|required|size|src|step|width|files|value|name][]' +
 					'button[A|autofocus|disabled|form|formaction|formenctype|formmethod|formnovalidate|formtarget|name|value|type][B]' +
 					'select[A|autofocus|disabled|form|multiple|name|size][option|optgroup]' +
@@ -376,7 +376,7 @@
 		selfClosingElementsMap = createLookupTable('self_closing_elements', 'colgroup dd dt li option p td tfoot th thead tr');
 		shortEndedElementsMap = createLookupTable('short_ended_elements', 'area base basefont br col frame hr img input isindex link meta param embed source wbr');
 		boolAttrMap = createLookupTable('boolean_attributes', 'checked compact declare defer disabled ismap multiple nohref noresize noshade nowrap readonly selected autoplay loop controls');
-		nonEmptyElementsMap = createLookupTable('non_empty_elements', 'td th iframe video audio object', shortEndedElementsMap);
+		nonEmptyElementsMap = createLookupTable('non_empty_elements', 'td th iframe video audio object script', shortEndedElementsMap);
 		textBlockElementsMap = createLookupTable('text_block_elements', 'h1 h2 h3 h4 h5 h6 p div address pre form ' + 
 						'blockquote center dir fieldset header footer article section hgroup aside nav figure');
 		blockElementsMap = createLookupTable('block_elements', 'hr table tbody thead tfoot ' + 
@@ -554,8 +554,15 @@
 					customElementsMap[name] = cloneName;
 
 					// If it's not marked as inline then add it to valid block elements
-					if (!inline)
+					if (!inline) {
+						blockElementsMap[name.toUpperCase()] = {};
 						blockElementsMap[name] = {};
+					}
+
+					// Add elements clone if needed
+					if (!elements[name]) {
+						elements[name] = elements[cloneName];
+					}
 
 					// Add custom elements at span/div positions
 					each(children, function(element, child) {
@@ -866,5 +873,7 @@
 		 * @param {String} valid_children Valid children elements string to parse
 		 */
 		self.addValidChildren = addValidChildren;
+
+		self.elements = elements;
 	};
 })(tinymce);

@@ -38,6 +38,7 @@
 			TreeWalker = tinymce.dom.TreeWalker,
 			rangeUtils = new tinymce.dom.RangeUtils(dom),
 			isValid = ed.schema.isValidChild,
+			isArray = tinymce.isArray,
 			isBlock = dom.isBlock,
 			forcedRootBlock = ed.settings.forced_root_block,
 			nodeIndex = dom.nodeIndex,
@@ -49,9 +50,13 @@
 			undef,
 			getContentEditable = dom.getContentEditable;
 
-		function isArray(obj) {
-			return obj instanceof Array;
-		};
+		function isTextBlock(name) {
+			if (name.nodeType) {
+				name = name.nodeName;
+			}
+
+			return !!ed.schema.getTextBlockElements()[name.toLowerCase()];
+		}
 
 		function getParents(node, selector) {
 			return dom.getParents(node, selector, dom.getRoot());
@@ -436,7 +441,7 @@
 
 						// Is it valid to wrap this item
 						if (contentEditable && !hasContentEditableState && isValid(wrapName, nodeName) && isValid(parentName, wrapName) &&
-								!(!node_specific && node.nodeType === 3 && node.nodeValue.length === 1 && node.nodeValue.charCodeAt(0) === 65279) && !isCaretNode(node)) {
+								!(!node_specific && node.nodeType === 3 && node.nodeValue.length === 1 && node.nodeValue.charCodeAt(0) === 65279) && !isCaretNode(node) && (!format.inline || !isBlock(node))) {
 							// Start wrapping
 							if (!currentWrapElm) {
 								// Wrap the node
@@ -649,6 +654,11 @@
 			// Merges the styles for each node
 			function process(node) {
 				var children, i, l, localContentEditable, lastContentEditable, hasContentEditableState;
+
+				// Skip on text nodes as they have neither format to remove nor children
+				if (node.nodeType === 3) {
+					return;
+				}
 
 				// Node has a contentEditable value
 				if (node.nodeType === 1 && getContentEditable(node)) {
@@ -1237,6 +1247,10 @@
 				siblingName = start ? 'previousSibling' : 'nextSibling';
 				root = dom.getRoot();
 
+				function isBogusBr(node) {
+					return node.nodeName == "BR" && node.getAttribute('data-mce-bogus') && !node.nextSibling;
+				};
+
 				// If it's a text node and the offset is inside the text
 				if (container.nodeType == 3 && !isWhiteSpaceNode(container)) {
 					if (start ? startOffset > 0 : endOffset < container.nodeValue.length) {
@@ -1251,7 +1265,7 @@
 
 					// Walk left/right
 					for (sibling = parent[siblingName]; sibling; sibling = sibling[siblingName]) {
-						if (!isBookmarkNode(sibling) && !isWhiteSpaceNode(sibling)) {
+						if (!isBookmarkNode(sibling) && !isWhiteSpaceNode(sibling) && !isBogusBr(sibling)) {
 							return parent;
 						}
 					}
@@ -1410,7 +1424,7 @@
 
 				// Expand to first wrappable block element or any block element
 				if (!node)
-					node = dom.getParent(container.nodeType == 3 ? container.parentNode : container, isBlock);
+					node = dom.getParent(container.nodeType == 3 ? container.parentNode : container, isTextBlock);
 
 				// Exclude inner lists from wrapping
 				if (node && format[0].wrapper)
@@ -1885,17 +1899,6 @@
 			return next;
 		};
 
-		/**
-		 * Returns true/false if the specified node is a text block or not.
-		 *
-		 * @private
-		 * @param {Node} node Node to check.
-		 * @return {boolean} True/false if the node is a text block.
-		 */
-		function isTextBlock(name) {
-			return /^(h[1-6]|p|div|pre|address|dl|dt|dd)$/.test(name);
-		};
-
 		function getContainer(rng, start) {
 			var container, offset, lastIdx, walker;
 
@@ -2131,11 +2134,23 @@
 					node.appendChild(dom.doc.createTextNode(INVISIBLE_CHAR));
 					node = node.firstChild;
 
-					// Insert caret container after the formated node
-					dom.insertAfter(caretContainer, formatNode);
+					var block = dom.getParent(formatNode, isTextBlock);
+
+					if (block && dom.isEmpty(block)) {
+						// Replace formatNode with caretContainer when removing format from empty block like <p><b>|</b></p>
+						formatNode.parentNode.replaceChild(caretContainer, formatNode);
+					} else {
+						// Insert caret container after the formated node
+						dom.insertAfter(caretContainer, formatNode);
+					}
 
 					// Move selection to text node
 					selection.setCursorLocation(node, 1);
+
+					// If the formatNode is empty, we can remove it safely. 
+					if (dom.isEmpty(formatNode)) {
+						dom.remove(formatNode);
+					}
 				}
 			};
 

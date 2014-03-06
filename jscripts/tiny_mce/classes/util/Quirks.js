@@ -13,7 +13,7 @@
  */
 tinymce.util.Quirks = function(editor) {
 	var VK = tinymce.VK, BACKSPACE = VK.BACKSPACE, DELETE = VK.DELETE, dom = editor.dom, selection = editor.selection,
-		settings = editor.settings, parser = editor.parser, serializer = editor.serializer;
+		settings = editor.settings, parser = editor.parser, serializer = editor.serializer, each = tinymce.each;
 
 	/**
 	 * Executes a command with a specific state this can be to enable/disable browser editing features.
@@ -36,6 +36,16 @@ tinymce.util.Quirks = function(editor) {
 	};
 
 	/**
+	 * Returns true/false if the event is prevented or not.
+	 *
+	 * @param {Event} e Event object.
+	 * @return {Boolean} true/false if the event is prevented or not.
+	 */
+	function isDefaultPrevented(e) {
+		return e.isDefaultPrevented();
+	};
+
+	/**
 	 * Fixes a WebKit bug when deleting contents using backspace or delete key.
 	 * WebKit will produce a span element if you delete across two block elements.
 	 *
@@ -54,54 +64,75 @@ tinymce.util.Quirks = function(editor) {
 	 */
 	function cleanupStylesWhenDeleting() {
 		function removeMergedFormatSpans(isDelete) {
-			var rng, blockElm, node, clonedSpan;
+			var rng, blockElm, wrapperElm, bookmark, container, offset, elm;
+
+			function isAtStartOrEndOfElm() {
+				if (container.nodeType == 3) {
+					if (isDelete && offset == container.length) {
+						return true;
+					}
+
+					if (!isDelete && offset === 0) {
+						return true;
+					}
+				}
+			}
 
 			rng = selection.getRng();
+			var tmpRng = [rng.startContainer, rng.startOffset, rng.endContainer, rng.endOffset];
 
-			// Find root block
-			blockElm = dom.getParent(rng.startContainer, dom.isBlock);
+			if (!rng.collapsed) {
+				isDelete = true;
+			}
 
-			// On delete clone the root span of the next block element
-			if (isDelete)
-				blockElm = dom.getNext(blockElm, dom.isBlock);
+			container = rng[(isDelete ? 'start' : 'end') + 'Container'];
+			offset = rng[(isDelete ? 'start' : 'end') + 'Offset'];
 
-			// Locate root span element and clone it since it would otherwise get merged by the "apple-style-span" on delete/backspace
-			if (blockElm) {
-				node = blockElm.firstChild;
+			if (container.nodeType == 3) {
+				blockElm = dom.getParent(rng.startContainer, dom.isBlock);
 
-				// Ignore empty text nodes
-				while (node && node.nodeType == 3 && node.nodeValue.length === 0)
-					node = node.nextSibling;
+				// On delete clone the root span of the next block element
+				if (isDelete) {
+					blockElm = dom.getNext(blockElm, dom.isBlock);
+				}
 
-				if (node && node.nodeName === 'SPAN') {
-					clonedSpan = node.cloneNode(false);
+				if (blockElm && (isAtStartOrEndOfElm() || !rng.collapsed)) {
+					// Wrap children of block in a EM and let WebKit stick is
+					// runtime styles junk into that EM
+					wrapperElm = dom.create('em', {'id': '__mceDel'});
+
+					each(tinymce.grep(blockElm.childNodes), function(node) {
+						wrapperElm.appendChild(node);
+					});
+
+					blockElm.appendChild(wrapperElm);
 				}
 			}
 
 			// Do the backspace/delete action
+			rng = dom.createRng();
+			rng.setStart(tmpRng[0], tmpRng[1]);
+			rng.setEnd(tmpRng[2], tmpRng[3]);
+			selection.setRng(rng);
 			editor.getDoc().execCommand(isDelete ? 'ForwardDelete' : 'Delete', false, null);
 
-			// Find all odd apple-style-spans
-			blockElm = dom.getParent(rng.startContainer, dom.isBlock);
-			tinymce.each(dom.select('span.Apple-style-span,font.Apple-style-span', blockElm), function(span) {
-				var bm = selection.getBookmark();
+			// Remove temp wrapper element
+			if (wrapperElm) {
+				bookmark = selection.getBookmark();
 
-				if (clonedSpan) {
-					dom.replace(clonedSpan.cloneNode(false), span, true);
-				} else {
-					dom.remove(span, true);
+				while (elm = dom.get('__mceDel')) {
+					dom.remove(elm, true);
 				}
 
-				// Restore the selection
-				selection.moveToBookmark(bm);
-			});
-		};
+				selection.moveToBookmark(bookmark);
+			}
+		}
 
 		editor.onKeyDown.add(function(editor, e) {
 			var isDelete;
 
 			isDelete = e.keyCode == DELETE;
-			if (!e.isDefaultPrevented() && (isDelete || e.keyCode == BACKSPACE) && !VK.modifierPressed(e)) {
+			if (!isDefaultPrevented(e) && (isDelete || e.keyCode == BACKSPACE) && !VK.modifierPressed(e)) {
 				e.preventDefault();
 				removeMergedFormatSpans(isDelete);
 			}
@@ -144,7 +175,7 @@ tinymce.util.Quirks = function(editor) {
 			var keyCode = e.keyCode, isCollapsed;
 
 			// Empty the editor if it's needed for example backspace at <p><b>|</b></p>
-			if (!e.isDefaultPrevented() && (keyCode == DELETE || keyCode == BACKSPACE)) {
+			if (!isDefaultPrevented(e) && (keyCode == DELETE || keyCode == BACKSPACE)) {
 				isCollapsed = editor.selection.isCollapsed();
 
 				// Selection is collapsed but the editor isn't empty
@@ -176,7 +207,7 @@ tinymce.util.Quirks = function(editor) {
 	 */
 	function selectAll() {
 		editor.onKeyDown.add(function(editor, e) {
-			if (e.keyCode == 65 && VK.metaKeyPressed(e)) {
+			if (!isDefaultPrevented(e) && e.keyCode == 65 && VK.metaKeyPressed(e)) {
 				e.preventDefault();
 				editor.execCommand('SelectAll');
 			}
@@ -220,7 +251,7 @@ tinymce.util.Quirks = function(editor) {
 	 */
 	function removeHrOnBackspace() {
 		editor.onKeyDown.add(function(editor, e) {
-			if (!e.isDefaultPrevented() && e.keyCode === BACKSPACE) {
+			if (!isDefaultPrevented(e) && e.keyCode === BACKSPACE) {
 				if (selection.isCollapsed() && selection.getRng(true).startOffset === 0) {
 					var node = selection.getNode();
 					var previousSibling = node.previousSibling;
@@ -243,7 +274,7 @@ tinymce.util.Quirks = function(editor) {
 		// wouldn't get proper focus if the user clicked on the HTML element
 		if (!Range.prototype.getClientRects) { // Detect getClientRects got introduced in FF 4
 			editor.onMouseDown.add(function(editor, e) {
-				if (e.target.nodeName === "HTML") {
+				if (!isDefaultPrevented(e) && e.target.nodeName === "HTML") {
 					var body = editor.getBody();
 
 					// Blur the body it's focused but not correctly focused
@@ -303,7 +334,7 @@ tinymce.util.Quirks = function(editor) {
 				if (target !== editor.getBody()) {
 					dom.setAttrib(target, "style", null);
 
-					tinymce.each(template, function(attr) {
+					each(template, function(attr) {
 						target.setAttributeNode(attr.cloneNode(true));
 					});
 				}
@@ -322,7 +353,7 @@ tinymce.util.Quirks = function(editor) {
 		editor.onKeyPress.add(function(editor, e) {
 			var applyAttributes;
 
-			if ((e.keyCode == 8 || e.keyCode == 46) && isSelectionAcrossElements()) {
+			if (!isDefaultPrevented(e) && (e.keyCode == 8 || e.keyCode == 46) && isSelectionAcrossElements()) {
 				applyAttributes = getAttributeApplyFunction();
 				editor.getDoc().execCommand('delete', false, null);
 				applyAttributes();
@@ -334,7 +365,7 @@ tinymce.util.Quirks = function(editor) {
 		dom.bind(editor.getDoc(), 'cut', function(e) {
 			var applyAttributes;
 
-			if (isSelectionAcrossElements()) {
+			if (!isDefaultPrevented(e) && isSelectionAcrossElements()) {
 				applyAttributes = getAttributeApplyFunction();
 				editor.onKeyUp.addToTop(blockEvent);
 
@@ -384,7 +415,7 @@ tinymce.util.Quirks = function(editor) {
 	 */
 	function disableBackspaceIntoATable() {
 		editor.onKeyDown.add(function(editor, e) {
-			if (!e.isDefaultPrevented() && e.keyCode === BACKSPACE) {
+			if (!isDefaultPrevented(e) && e.keyCode === BACKSPACE) {
 				if (selection.isCollapsed() && selection.getRng(true).startOffset === 0) {
 					var previousSibling = selection.getNode().previousSibling;
 					if (previousSibling && previousSibling.nodeName && previousSibling.nodeName.toLowerCase() === "table") {
@@ -492,7 +523,7 @@ tinymce.util.Quirks = function(editor) {
 			var isDelete, rng, container, offset, brElm, sibling, collapsed;
 
 			isDelete = e.keyCode == DELETE;
-			if (!e.isDefaultPrevented() && (isDelete || e.keyCode == BACKSPACE) && !VK.modifierPressed(e)) {
+			if (!isDefaultPrevented(e) && (isDelete || e.keyCode == BACKSPACE) && !VK.modifierPressed(e)) {
 				rng = selection.getRng();
 				container = rng.startContainer;
 				offset = rng.startOffset;
@@ -501,6 +532,12 @@ tinymce.util.Quirks = function(editor) {
 				// Override delete if the start container is a text node and is at the beginning of text or
 				// just before/after the last character to be deleted in collapsed mode
 				if (container.nodeType == 3 && container.nodeValue.length > 0 && ((offset === 0 && !collapsed) || (collapsed && offset === (isDelete ? 0 : 1)))) {
+					// Edge case when deleting <p><b><img> |x</b></p>
+					sibling = container.previousSibling;
+					if (sibling && sibling.nodeName == "IMG") {
+						return;
+					}
+
 					nonEmptyElements = editor.schema.getNonEmptyElements();
 
 					// Prevent default logic since it's broken
@@ -541,7 +578,7 @@ tinymce.util.Quirks = function(editor) {
 		editor.onKeyDown.add(function(editor, e) {
 			var rng, container, offset, root, parent;
 
-			if (e.isDefaultPrevented() || e.keyCode != VK.BACKSPACE) {
+			if (isDefaultPrevented(e) || e.keyCode != VK.BACKSPACE) {
 				return;
 			}
 
@@ -606,7 +643,7 @@ tinymce.util.Quirks = function(editor) {
 	 */
 	function addBrAfterLastLinks() {
 		function fixLinks(editor, o) {
-			tinymce.each(dom.select('a'), function(node) {
+			each(dom.select('a'), function(node) {
 				var parentNode = node.parentNode, root = dom.getRoot();
 
 				if (parentNode.lastChild === node) {
@@ -666,7 +703,7 @@ tinymce.util.Quirks = function(editor) {
 		editor.onKeyDown.add(function(editor, e) {
 			var rng;
 
-			if (!e.isDefaultPrevented() && e.keyCode == BACKSPACE) {
+			if (!isDefaultPrevented(e) && e.keyCode == BACKSPACE) {
 				rng = editor.getDoc().selection.createRange();
 				if (rng && rng.item) {
 					e.preventDefault();
@@ -689,7 +726,7 @@ tinymce.util.Quirks = function(editor) {
 		// IE10+
 		if (getDocumentMode() >= 10) {
 			emptyBlocksCSS = '';
-			tinymce.each('p div h1 h2 h3 h4 h5 h6'.split(' '), function(name, i) {
+			each('p div h1 h2 h3 h4 h5 h6'.split(' '), function(name, i) {
 				emptyBlocksCSS += (i > 0 ? ',' : '') + name + ':empty';
 			});
 
@@ -809,7 +846,7 @@ tinymce.util.Quirks = function(editor) {
 				width = height = 0;
 			}
 
-			tinymce.each(resizeHandles, function(handle, name) {
+			each(resizeHandles, function(handle, name) {
 				var handleElm;
 
 				// Get existing or render resize handle
@@ -906,7 +943,7 @@ tinymce.util.Quirks = function(editor) {
 			var controlElm = dom.getParent(selection.getNode(), 'table,img');
 
 			// Remove data-mce-selected from all elements since they might have been copied using Ctrl+c/v
-			tinymce.each(dom.select('img[data-mce-selected]'), function(img) {
+			each(dom.select('img[data-mce-selected]'), function(img) {
 				img.removeAttribute('data-mce-selected');
 			});
 
@@ -977,6 +1014,26 @@ tinymce.util.Quirks = function(editor) {
 		}
 	}
 
+	/**
+	 * IE 11 has an annoying issue where you can't move focus into the editor
+	 * by clicking on the white area HTML element. We used to be able to to fix this with
+	 * the fixCaretSelectionOfDocumentElementOnIe fix. But since M$ removed the selection
+	 * object it's not possible anymore. So we need to hack in a ungly CSS to force the
+	 * body to be at least 150px. If the user clicks the HTML element out side this 150px region
+	 * we simply move the focus into the first paragraph. Not ideal since you loose the
+	 * positioning of the caret but goot enough for most cases.
+	 */
+	function bodyHeight() {
+		editor.contentStyles.push('body {min-height: 100px}');
+		editor.onClick.add(function(ed, e) {
+			if (e.target.nodeName == 'HTML') {
+				editor.execCommand('SelectAll');
+				editor.selection.collapse(true);
+				editor.nodeChanged();
+			}
+		});
+	}
+
 	// All browsers
 	disableBackspaceIntoATable();
 	removeBlockQuoteOnBackSpace();
@@ -1000,7 +1057,7 @@ tinymce.util.Quirks = function(editor) {
 	}
 
 	// IE
-	if (tinymce.isIE) {
+	if (tinymce.isIE && !tinymce.isIE11) {
 		removeHrOnBackspace();
 		ensureBodyHasRoleApplication();
 		addNewLinesBeforeBrInPre();
@@ -1010,8 +1067,13 @@ tinymce.util.Quirks = function(editor) {
 		keepNoScriptContents();
 	}
 
+	// IE 11+
+	if (tinymce.isIE11) {
+		bodyHeight();
+	}
+
 	// Gecko
-	if (tinymce.isGecko) {
+	if (tinymce.isGecko && !tinymce.isIE11) {
 		removeHrOnBackspace();
 		focusBody();
 		removeStylesWhenDeletingAccrossBlockElements();

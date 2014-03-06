@@ -1082,6 +1082,30 @@ test('contentEditable: true inside contentEditable: false', function() {
 	equal(editor.getContent(), '<p>abc</p><p><span><b>def</b></span></p>', 'Text is bold');
 });
 
+test('Del element wrapping blocks', function() {
+	editor.setContent('<p>a</p>');
+	setSelection('p', 0, 'p', 1);
+	editor.formatter.register('format', {block : 'del', wrapper: true});
+	editor.formatter.apply('format');
+	equal(getContent(), '<del><p>a</p></del>');
+});
+
+test('Del element replacing block', function() {
+	editor.setContent('<p>a</p>');
+	setSelection('p', 0, 'p', 1);
+	editor.formatter.register('format', {block : 'del'});
+	editor.formatter.apply('format');
+	equal(getContent(), '<del>a</del>');
+});
+
+test('Del element as inline', function() {
+	editor.setContent('<p>a</p>');
+	setSelection('p', 0, 'p', 1);
+	editor.formatter.register('format', {inline : 'del'});
+	editor.formatter.apply('format');
+	equal(getContent(), '<p><del>a</del></p>');
+});
+
 test('Bug #5134 - TinyMCE removes formatting tags in the getContent', function() {
 	editor.setContent('');
 	editor.formatter.register('format', {inline : 'strong', toggle: false});
@@ -1098,6 +1122,14 @@ test('Bug #5134 - TinyMCE removes formatting tags in the getContent - typing', f
 	equal(getContent(), '', 'empty TinyMCE');
 	type('a');
 	equal(getContent(), '<strong>a</strong>', 'bold text inside TinyMCE');
+});
+
+test('Bug #5453 - TD contents with BR gets wrapped in block format', function() {
+	editor.setContent('<table><tr><td>abc<br />123</td></tr></table>');
+	setSelection('td', 1, 'td', 1);
+	editor.formatter.register('format', {block : 'h1'});
+	editor.formatter.apply('format');
+	equal(getContent(), '<table><tbody><tr><td><h1>abc</h1>123</td></tr></tbody></table>');
 });
 
 /*
