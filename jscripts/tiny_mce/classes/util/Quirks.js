@@ -140,7 +140,7 @@ tinymce.util.Quirks = function(editor) {
 
 		editor.addCommand('Delete', function() {removeMergedFormatSpans();});
 	};
-	
+
 	/**
 	 * Makes sure that the editor body becomes empty when backspace or delete is pressed in empty editors.
 	 *
@@ -301,7 +301,11 @@ tinymce.util.Quirks = function(editor) {
 			// WebKit can't even do simple things like selecting an image
 			// Needs tobe the setBaseAndExtend or it will fail to select floated images
 			if (/^(IMG|HR)$/.test(e.nodeName)) {
-				selection.getSel().setBaseAndExtent(e, 0, e, 1);
+				try {
+					selection.getSel().setBaseAndExtent(e, 0, e, 1); //Original behavior in 3.5.9; still works in Safari 10.1
+				} catch (ex) {
+					selection.getSel().setBaseAndExtent(e, 0, e, 0); //Updated behavior for Chrome 58+ (and, I'm guessing, future versions of Safari)
+				}
 			}
 
 			if (e.nodeName == 'A' && dom.hasClass(e, 'mceItemAnchor')) {
