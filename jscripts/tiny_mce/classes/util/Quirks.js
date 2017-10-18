@@ -295,24 +295,21 @@ tinymce.util.Quirks = function(editor) {
 	 */
 	function selectControlElements() {
 		editor.onClick.add(function(editor, e) {
-			e = e.target;
+		target = e.target;
 
-			// Workaround for bug, http://bugs.webkit.org/show_bug.cgi?id=12250
-			// WebKit can't even do simple things like selecting an image
-			// Needs tobe the setBaseAndExtend or it will fail to select floated images
-			if (/^(IMG|HR)$/.test(e.nodeName)) {
-				try {
-					selection.getSel().setBaseAndExtent(e, 0, e, 1); //Original behavior in 3.5.9; still works in Safari 10.1
-				} catch (ex) {
-					selection.getSel().setBaseAndExtent(e, 0, e, 0); //Updated behavior for Chrome 58+ (and, I'm guessing, future versions of Safari)
-				}
-			}
-
-			if (e.nodeName == 'A' && dom.hasClass(e, 'mceItemAnchor')) {
-				selection.select(e);
-			}
-
+		// Workaround for bug, http://bugs.webkit.org/show_bug.cgi?id=12250
+		// WebKit can't even do simple things like selecting an image
+		// Needs tobe the setBaseAndExtend or it will fail to select floated images
+		if (/^(IMG|HR)$/.test(target.nodeName) && dom.getContentEditableParent(target) !== "false") {
+			e.preventDefault();
+			editor.selection.select(target);
 			editor.nodeChanged();
+		}
+
+		if (target.nodeName == 'A' && dom.hasClass(target, 'mceItemAnchor')) {
+			e.preventDefault();
+			selection.select(target);
+		}
 		});
 	};
 
